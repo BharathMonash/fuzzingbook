@@ -5,7 +5,7 @@
     as well as for the Jupyter Notebook version.
 
     To apply this on local Jupyter notebook sessions, copy it to
-    `~/.jupyter/custom/custom.css'
+    ~/.jupyter/custom/custom.css
 */
 
 /* Loading fonts in Jupyter */
@@ -32,7 +32,7 @@ code, kbd, pre, samp {
 /* Font sizes */
 /* We use somewhat smaller fonts for small devices and print */
 
-p, li. summary {
+p, li, summary {
 	font-size: 16px;
 	line-height: 26px;
 }
@@ -277,6 +277,17 @@ a:active {
     padding-bottom: 5px;
 }
 
+/* Quizzes */
+.quiz {
+    border-style: dotted;
+    padding-top: 0px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 5px;
+    background: cornsilk;
+}
+
+
 
 /* Details */
 /* See https://stackoverflow.com/questions/38213329/how-to-add-css3-transition-with-html5-details-summary-tag-reveal?noredirect=1&lq=1 */
@@ -307,9 +318,12 @@ details {
     padding-left: 15px;
     padding-right: 15px;
     padding-bottom: 5px;
+    outline: none !important;
 }
 
-
+summary {
+    outline: none !important;
+}
 
 
 

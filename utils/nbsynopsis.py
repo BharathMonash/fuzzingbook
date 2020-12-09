@@ -34,17 +34,17 @@ def notebook_synopsis(notebook_name):
     for cell in notebook.cells:
         if not first_synopsis and cell.source.startswith(SYNOPSIS_TITLE):
             in_synopsis = True
-            synopsis = SYNOPSIS_TITLE + """
+            synopsis = SYNOPSIS_TITLE + f"""
 <!-- Automatically generated. Do not edit. -->
 
 To [use the code provided in this chapter](Importing.ipynb), write
 
 ```python
->>> from fuzzingbook.%s import <identifier>
+>>> from {args.project}.{notebook_basename} import <identifier>
 ```
 
 and then make use of the following features.
-""" % notebook_basename
+"""
             synopsis += cell.source[len(SYNOPSIS_TITLE):] + "\n\n"
             continue
         elif cell.source.startswith("## "):
@@ -53,7 +53,10 @@ and then make use of the following features.
 
         if in_synopsis:
             if cell.cell_type == 'code':
-                synopsis += "```python\n>>> " + cell.source.replace('\n', '\n>>> ') + "\n```\n"
+                if cell.source.startswith("# ignore"):
+                    pass
+                else:
+                    synopsis += "```python\n>>> " + cell.source.replace('\n', '\n>>> ') + "\n```\n"
                 output_text = ''
                 for output in cell.outputs:
                     text = None
@@ -88,9 +91,9 @@ and then make use of the following features.
                             os.system('convert -density 300 ' + svg_filename + ' ' + png_filename)
                             if 'RENDER_HTML' in os.environ:
                                 # Render all HTML and SVG into PNG
-                                text = "![](" + 'PICS/' + png_basename + ')'
+                                text = "![](" + 'PICS/' + png_basename + ')\n'
                             else:
-                                text = "![](" + 'PICS/' + svg_basename + ')'
+                                text = "![](" + 'PICS/' + svg_basename + ')\n'
 
                     # PNG output
                     if text is None:
@@ -113,7 +116,25 @@ and then make use of the following features.
                             print("Creating", png_filename)
                             with open(png_filename, "wb") as f:
                                 f.write(base64.b64decode(png, validate=True))
-                            text = "![](" + 'PICS/' + png_basename + ')'
+                            text = "![](" + 'PICS/' + png_basename + ')\n'
+
+                    # Markdown output
+                    if text is None:
+                        try:
+                            text = "```\n" + output.data['text/markdown'] + "\n```\n"
+                        except KeyError:
+                            pass
+                        except AttributeError:
+                            pass
+
+                    # HTML output
+                    if text is None:
+                        try:
+                            text = "```\n" + output.data['text/html'] + "\n```\n"
+                        except KeyError:
+                            pass
+                        except AttributeError:
+                            pass
 
                     # Text output
                     if text is None:
@@ -125,12 +146,12 @@ and then make use of the following features.
                     # Data output
                     if text is None:
                         try:
-                            text = output.data['text/plain']
+                            text = output.data['text/plain'] + '\n'
                         except KeyError:
                             pass
                     
                     if text is not None:
-                        output_text += text + '\n'
+                        output_text += text
 
                 if output_text:
                     if output_text.startswith('![]'):
@@ -141,8 +162,19 @@ and then make use of the following features.
                 synopsis += cell.source + "\n\n"
     
     synopsis = synopsis.replace("```\n```python\n", "")
+    synopsis = synopsis.replace("```\n```\n", "")
 
     return synopsis
+    
+def skip_cell(cell):
+    # Don't include in slides
+    if 'metadata' not in cell:
+        cell['metadata'] = {}
+    if 'slideshow' not in cell.metadata:
+        cell.metadata['slideshow'] = {}
+    if 'slide_type' not in cell.metadata.slideshow:
+        cell.metadata.slideshow['slide_type'] = 'skip'
+    return cell
     
 def update_synopsis(notebook_name, synopsis):
     notebook_path = notebook_name
@@ -157,10 +189,12 @@ def update_synopsis(notebook_name, synopsis):
             if cell.source == synopsis:
                 return
             cell.source = synopsis
+            cell = skip_cell(cell)
             break
         elif cell.source.startswith("## "):
             # Insert cell before
             new_cell = nbformat.v4.new_markdown_cell(source=synopsis)
+            new_cell = skip_cell(new_cell)
             notebook.cells = (notebook.cells[:i] + 
                                 [new_cell] + notebook.cells[i:])
             break
@@ -172,13 +206,12 @@ def update_synopsis(notebook_name, synopsis):
         f.write(nbformat.writes(notebook))
         
     print("Updated " + notebook_path)
-        
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--project", help="project name", default="fuzzingbook")
     parser.add_argument("--update", action='store_true', 
-                        help="Update synopis section")
+                        help="Update synopsis section")
     parser.add_argument("notebooks", nargs='*', help="notebooks to extract/update synopsis for")
     args = parser.parse_args()
 

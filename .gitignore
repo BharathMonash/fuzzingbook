@@ -29,6 +29,8 @@ pdf/*.pdf
 pdf/*.tex
 pdf/*_files/
 
+*.blg
+
 nbpdf/*.pdf
 
 word/*.docx
@@ -41,7 +43,8 @@ markdown/*.md
 markdown/*_files/
 
 full_notebooks/*.ipynb
-full_notebooks/fuzzingbook_utils/*
+full_notebooks/*_utils/*
+full_notebooks/bookutils/*
 
 rendered/*.ipynb
 
@@ -54,14 +57,20 @@ notebooks/PICS/Sitemap.svg
 
 # Temp files
 book
-fuzzingbook
+*book
 geckodriver.log
 orders.db
 FuzzManager
 simply-buggy
+**/my_project
+import*.py
+.ipynb_checkpoints
 
 # Docker-make output directory
 build-output/
+
+# LS
+.virtual_documents
 
 # Logs
 binder.log
@@ -72,9 +81,14 @@ binder.log
 # Caches
 .mypy_cache/
 
+# .bib timestamps
+.*.bib.*
+
 # Zeller's files
 Security Testing
 papers
+course
+udacity
 videos
 
 *.command

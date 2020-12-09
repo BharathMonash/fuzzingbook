@@ -1,54 +1,8 @@
-# Fuzzingbook Makefile
+# Fuzzingbook/Debuggingbook Makefile
 
 # Get chapter files
 CHAPTERS_MAKEFILE = Chapters.makefile
 include $(CHAPTERS_MAKEFILE)
-
-# These chapters will show up in the "public" version
-PUBLIC_CHAPTERS = \
-	$(INTRO_PART) \
-	$(LEXICAL_PART) \
-	$(SYNTACTICAL_PART) \
-	$(SEMANTICAL_PART) \
-	$(DOMAINS_PART) \
-	$(MANAGEMENT_PART)
-
-# These chapters will show up in the "beta" version
-CHAPTERS = \
-	$(INTRO_PART) \
-	$(INTRO_PART_READY) \
-	$(INTRO_PART_TODO) \
-	$(LEXICAL_PART) \
-	$(LEXICAL_PART_READY) \
-	$(LEXICAL_PART_TODO) \
-	$(SYNTACTICAL_PART) \
-	$(SYNTACTICAL_PART_READY) \
-	$(SYNTACTICAL_PART_TODO) \
-	$(SEMANTICAL_PART) \
-	$(SEMANTICAL_PART_READY) \
-	$(SEMANTICAL_PART_TODO) \
-	$(DOMAINS_PART) \
-	$(DOMAINS_PART_READY) \
-	$(DOMAINS_PART_TODO) \
-	$(MANAGEMENT_PART) \
-	$(MANAGEMENT_PART_READY) \
-	$(MANAGEMENT_PART_TODO)
-	
-READY_CHAPTERS = \
-	$(INTRO_PART_READY) \
-	$(LEXICAL_PART_READY) \
-	$(SYNTACTICAL_PART_READY) \
-	$(SEMANTICAL_PART_READY) \
-	$(DOMAINS_PART_READY) \
-	$(MANAGEMENT_PART_READY)
-
-TODO_CHAPTERS = \
-	$(INTRO_PART_TODO) \
-	$(LEXICAL_PART_TODO) \
-	$(SYNTACTICAL_PART_TODO) \
-	$(SEMANTICAL_PART_TODO) \
-	$(DOMAINS_PART_TODO) \
-	$(MANAGEMENT_PART_TODO)
 
 # All source notebooks
 SOURCE_FILES = \
@@ -60,7 +14,10 @@ SOURCE_FILES = \
 # The bibliography file
 BIB = fuzzingbook.bib
 
-# The utilities in fuzzingbook_utils
+# The utilities folder
+UTILS = bookutils
+
+# The utilities in $(UTILS)
 UTILITY_FILES = \
 	__init__.py \
 	PrettyTable.py \
@@ -75,13 +32,13 @@ NOTEBOOKS = notebooks
 # Derived versions including HTML, SVG, and text output cells (for Web)
 FULL_NOTEBOOKS = full_notebooks
 
-# Derived versions including PNG and text output cells (for LaTeX and PDF)
+# Derived versions including PNG and text output cells,
+# but without excursions (for LaTeX and PDF)
 RENDERED_NOTEBOOKS = rendered
 
-
 # Git repo
-GITHUB_REPO = https://github.com/uds-se/fuzzingbook/
-BINDER_URL = https://mybinder.org/v2/gh/uds-se/fuzzingbook/master?filepath=docs/beta/notebooks/00_Table_of_Contents.ipynb
+GITHUB_REPO = https://github.com/uds-se/$(PROJECT)/
+BINDER_URL = https://mybinder.org/v2/gh/uds-se/$(PROJECT)/master?filepath=docs/beta/notebooks/00_Table_of_Contents.ipynb
 
 # Sources in the notebooks folder
 SOURCES = $(SOURCE_FILES:%=$(NOTEBOOKS)/%)
@@ -119,14 +76,13 @@ endif
 
 # Files to appear in the table of contents
 ifndef BETA
-TOC_CHAPTERS := $(PUBLIC_CHAPTERS)
-TOC_APPENDICES = $(APPENDICES)
 CHAPTER_SOURCES := $(PUBLIC_CHAPTERS:%=$(NOTEBOOKS)/%)
 endif
 ifdef BETA
-TOC_CHAPTERS := $(CHAPTERS)
-TOC_APPENDICES = $(APPENDICES)
+PUBLIC_CHAPTERS := $(CHAPTERS)
 endif
+TOC_CHAPTERS := $(PUBLIC_CHAPTERS)
+TOC_APPENDICES = $(APPENDICES)
 
 # Files to appear on the Web page
 DOCS = \
@@ -148,8 +104,8 @@ PYS       = $(SOURCE_FILES:%.ipynb=$(CODE_TARGET)%.py) \
 WORDS     = $(SOURCE_FILES:%.ipynb=$(WORD_TARGET)%.docx)
 MARKDOWNS = $(SOURCE_FILES:%.ipynb=$(MARKDOWN_TARGET)%.md)
 EPUBS     = $(SOURCE_FILES:%.ipynb=$(EPUB_TARGET)%.epub)
-FULLS     = $(FULL_NOTEBOOKS)/fuzzingbook_utils \
-				$(UTILITY_FILES:%=$(FULL_NOTEBOOKS)/fuzzingbook_utils/%) \
+FULLS     = $(FULL_NOTEBOOKS)/$(UTILS) \
+				$(UTILITY_FILES:%=$(FULL_NOTEBOOKS)/$(UTILS)/%) \
 				$(SOURCE_FILES:%.ipynb=$(FULL_NOTEBOOKS)/%.ipynb) 
 RENDERS = $(SOURCE_FILES:%.ipynb=$(RENDERED_NOTEBOOKS)/%.ipynb)
 
@@ -167,7 +123,7 @@ SITEMAP_SVG = $(NOTEBOOKS)/PICS/Sitemap.svg
 
 # Configuration
 # The site
-SITE = https://www.fuzzingbook.org
+SITE = https://www.$(PROJECT).org
 
 # What we use for production: nbpublish (preferred), bookbook, or nbconvert
 PUBLISH ?= nbpublish
@@ -256,12 +212,12 @@ endif
 
 
 # Book base name
-BOOK = fuzzingbook
+BOOK = $(PROJECT)
 
 ifeq ($(PUBLISH),bookbook)
 # Use bookbook
 CONVERT_TO_HTML   = $(NBCONVERT) --to html --output-dir=$(HTML_TARGET)
-CONVERT_TO_TEX    = $(NBCONVERT) --to latex --template fuzzingbook.tplx --output-dir=$(PDF_TARGET)
+CONVERT_TO_TEX    = $(NBCONVERT) --to latex --template $(PROJECT).tplx --output-dir=$(PDF_TARGET)
 BOOK_TEX    = $(PDF_TARGET)$(BOOK).tex
 BOOK_PDF    = $(PDF_TARGET)$(BOOK).pdf
 BOOK_HTML   = $(HTML_TARGET)$(BOOK).html
@@ -286,7 +242,7 @@ PUBLISH_PLUGINS = \
 else
 # Use standard Jupyter tools
 CONVERT_TO_HTML   = $(NBCONVERT) --to html --output-dir=$(HTML_TARGET)
-CONVERT_TO_TEX    = $(NBCONVERT) --to latex --template fuzzingbook.tplx --output-dir=$(PDF_TARGET)
+CONVERT_TO_TEX    = $(NBCONVERT) --to latex --template $(PROJECT).tplx --output-dir=$(PDF_TARGET)
 # CONVERT_TO_SLIDES = $(NBCONVERT) --to slides --output-dir=$(SLIDES_TARGET)
 BOOK_TEX   = 
 BOOK_PDF   = 
@@ -299,7 +255,7 @@ endif
 
 # For Python, we use our own script that takes care of distinguishing 
 # main (script) code from definitions to be imported
-EXPORT_NOTEBOOK_CODE = $(NOTEBOOKS)/fuzzingbook_utils/export_notebook_code.py 
+EXPORT_NOTEBOOK_CODE = $(NOTEBOOKS)/$(UTILS)/export_notebook_code.py 
 CONVERT_TO_PYTHON = $(PYTHON) $(EXPORT_NOTEBOOK_CODE)
 
 # This would be the Jupyter alternative
@@ -340,7 +296,7 @@ chapters default: html code
 
 # The book is recreated after any change to any source
 .PHONY: book all and more
-book fuzzingbook:	book-html book-pdf
+book $(PROJECT):	book-html book-pdf
 all:	chapters pdf code slides book
 and more:	word markdown epub
 
@@ -351,15 +307,15 @@ html:	ipypublish-chapters $(HTMLS)
 pdf:	ipypublish-chapters $(PDFS)
 nbpdf:	ipypublish-chapters $(NBPDFS)
 python code:	$(PYS)
-slides:	$(SLIDES) $(REVEAL_JS)
+slides:	$(REVEAL_JS) $(SLIDES) 
 word doc docx: $(WORDS)
 md markdown: $(MARKDOWNS)
 epub: $(EPUBS)
 full-notebooks full fulls: $(FULLS)
 rendered-notebooks rendered renders: $(RENDERS)
 
-book-pdf fuzzingbook-pdf:  ipypublish-book $(BOOK_PDF)
-book-html fuzzingbook-html: ipypublish-book $(BOOK_HTML)
+book-pdf $(PROJECT)-pdf:  ipypublish-book $(BOOK_PDF)
+book-html $(PROJECT)-html: ipypublish-book $(BOOK_HTML)
 
 .PHONY: ipypublish-book ipypublish-chapters
 ifeq ($(PUBLISH),bookbook)
@@ -396,7 +352,7 @@ jupyter:
 # Help
 .PHONY: help
 help:
-	@echo "Welcome to the 'fuzzingbook' Makefile!"
+	@echo "Welcome to the '$(PROJECT)' Makefile!"
 	@echo ""
 	@echo "* make chapters (default) -> HTML and code for all chapters (notebooks)"
 	@echo "* make (pdf|html|code|slides|word|markdown) -> given subcategory only"
@@ -422,28 +378,30 @@ help:
 	@echo "  (default: automatic)"
 	
 # Run a notebook, (re)creating all output cells
-ADD_METADATA = utils/add_metadata.py
-NBAUTOSLIDE = utils/nbautoslide.py
-NBSYNOPSIS = utils/nbsynopsis.py
+ADD_METADATA = $(SHARED)utils/add_metadata.py
+NBAUTOSLIDE = $(SHARED)utils/nbautoslide.py
+NBSYNOPSIS = $(SHARED)utils/nbsynopsis.py
+NBSHORTEN = $(SHARED)utils/nbshorten.py
 
 $(FULL_NOTEBOOKS)/%.ipynb: $(NOTEBOOKS)/%.ipynb $(DEPEND_TARGET)%.makefile $(ADD_METADATA) $(NBAUTOSLIDE) $(NBSYNOPSIS)
 	$(EXECUTE_NOTEBOOK) $<
-	$(PYTHON) $(ADD_METADATA) $@ > $@~ && mv $@~ $@
+	$(PYTHON) $(ADD_METADATA) --project $(PROJECT) $@ > $@~ && mv $@~ $@
 	$(PYTHON) $(NBAUTOSLIDE) --in-place $@
-	$(PYTHON) $(NBSYNOPSIS) --update $@
+	$(PYTHON) $(NBSYNOPSIS) --project $(PROJECT) --update $@
 	
-$(RENDERED_NOTEBOOKS)/%.ipynb: $(NOTEBOOKS)/%.ipynb $(DEPEND_TARGET)%.makefile $(ADD_METADATA) $(NBAUTOSLIDE) $(NBSYNOPSIS) $(NOTEBOOKS)/fuzzingbook_utils/__init__.py
+$(RENDERED_NOTEBOOKS)/%.ipynb: $(NOTEBOOKS)/%.ipynb $(DEPEND_TARGET)%.makefile $(ADD_METADATA) $(SHARED)$(NBAUTOSLIDE) $(SHARED)$(NBSYNOPSIS) $(SHARED)$(NBSHORTEN) $(NOTEBOOKS)/$(UTILS)/__init__.py
 	$(RENDER_NOTEBOOK) $<
-	$(PYTHON) $(ADD_METADATA) $@ > $@~ && mv $@~ $@
+	$(PYTHON) $(ADD_METADATA) --project $(PROJECT) $@ > $@~ && mv $@~ $@
 	$(PYTHON) $(NBAUTOSLIDE) --in-place $@
-	RENDER_HTML=1 $(PYTHON) $(NBSYNOPSIS) --update $@
+	RENDER_HTML=1 $(PYTHON) $(NBSYNOPSIS) --project $(PROJECT) --update $@
+	$(PYTHON) $(NBSHORTEN) --link-to "$(SITE)/html/" --in-place $@
 
-$(FULL_NOTEBOOKS)/fuzzingbook_utils:
-	$(MKDIR) $(FULL_NOTEBOOKS)/fuzzingbook_utils
+$(FULL_NOTEBOOKS)/$(UTILS):
+	$(MKDIR) $(FULL_NOTEBOOKS)/$(UTILS)
 
-$(FULL_NOTEBOOKS)/fuzzingbook_utils/%: $(NOTEBOOKS)/fuzzingbook_utils/%
-	@test -d $(FULL_NOTEBOOKS)/fuzzingbook_utils || \
-		$(MKDIR) $(FULL_NOTEBOOKS)/fuzzingbook_utils
+$(FULL_NOTEBOOKS)/$(UTILS)/%: $(NOTEBOOKS)/$(UTILS)/%
+	@test -d $(FULL_NOTEBOOKS)/$(UTILS) || \
+		$(MKDIR) $(FULL_NOTEBOOKS)/$(UTILS)
 	cp -pr $< $@
 
 
@@ -469,29 +427,64 @@ $(PDF_TARGET)%.pdf:	$(PDF_TARGET)%.tex $(BIB)
 	@-test -L $(PDF_TARGET)PICS || ln -s ../$(NOTEBOOKS)/PICS $(PDF_TARGET)
 	cd $(PDF_TARGET) && $(LATEXMK) $(LATEXMK_OPTS) $*
 	@cd $(PDF_TARGET) && $(RM) $*.aux $*.bbl $*.blg $*.log $*.out $*.toc $*.frm $*.lof $*.lot $*.fls $*.fdb_latexmk $*.xdv
-	@cd $(PDF_TARGET) && $(RM) -r $*_files
 	@echo Created $@
 	@$(OPEN) $@
 endif
 
-$(PDF_TARGET)%.tex:	$(RENDERED_NOTEBOOKS)/%.ipynb $(BIB) $(PUBLISH_PLUGINS) $(ADD_METADATA)
+# Keep the .tex files
+.PRECIOUS: $(PDF_TARGET)%.tex
+
+POST_TEX = utils/post_tex
+
+$(PDF_TARGET)%.tex:	$(RENDERED_NOTEBOOKS)/%.ipynb $(BIB) $(PUBLISH_PLUGINS) $(SHARED)$(ADD_METADATA) $(SHARED)$(POST_TEX)
 	$(eval TMPDIR := $(shell mktemp -d))
-	$(PYTHON) $(ADD_METADATA) --titlepage $< > $(TMPDIR)/$(notdir $<)
-	cp -pr $(NOTEBOOKS)/PICS fuzzingbook.* $(TMPDIR)
+	$(PYTHON) $(ADD_METADATA) --project $(PROJECT) --titlepage $< > $(TMPDIR)/$(notdir $<)
+	cp -pr $(NOTEBOOKS)/PICS $(BIB) $(TMPDIR)
 	$(CONVERT_TO_TEX) $(TMPDIR)/$(notdir $<)
+	$(POST_TEX) $@ > $@~ && mv $@~ $@
 	@-$(RM) -fr $(TMPDIR)
 	@cd $(PDF_TARGET) && $(RM) $*.nbpub.log
 
 
 POST_HTML_OPTIONS = $(BETA_FLAG) \
+	--project="$(PROJECT)" \
+	--title="$(BOOKTITLE)" \
+	--authors="$(AUTHORS)" \
+	--twitter="$(TWITTER)" \
 	--public-chapters="$(CHAPTER_SOURCES) $(APPENDICES_SOURCES)" \
 	--ready-chapters="$(READY_SOURCES)" \
 	--todo-chapters="$(TODO_SOURCES)" \
-	--new-chapters="$(NEW_SOURCES)" \
+	--new-chapters="$(NEW_SOURCES)"
+
+HTML_DEPS = $(BIB) $(SHARED)$(PUBLISH_PLUGINS) $(SHARED)utils/post_html.py $(CHAPTERS_MAKEFILE) $(BIBCHECK)
+
+# Check bib
+BIBER = biber
+BIBCHECK = .$(BIB).ascii .$(BIB).python .$(BIB).biber 
+checkbib check-bib: $(BIBCHECK)
+	@echo "Check completed; $(BIB) is ok"
+
+check-bib-ascii: .$(BIB).ascii
+.$(BIB).ascii: $(BIB)
+	@echo "Checking $(BIB) for 7-bit ASCII encoding"
+	@if grep -Hn '[^[:print:]]' fuzzingbook.bib; then false; fi
+	@touch $@
+
+check-bib-python: .$(BIB).python
+.$(BIB).python: $(BIB)
+	@echo "Checking $(BIB) for Python usage with bibtexparser"
+	@$(PYTHON) -c 'import bibtexparser; bibtexparser.load(open("$(BIB)"))'
+	@touch $@
+
+check-bib-biber: .$(BIB).biber
+.$(BIB).biber: $(BIB)
+	@echo "Checking $(BIB) for LaTeX usage with Biber"
+	@$(BIBER) --tool --validate-datamodel $(BIB)
+	@$(RM) fuzzingbook_bibertool.bib
+	@touch .$(BIB).biber
+
+.PHONY: checkbib check-bib check-bib-ascii check-bib-python check-bib-biber
 	
-HTML_DEPS = $(BIB) $(PUBLISH_PLUGINS) utils/post_html.py $(CHAPTERS_MAKEFILE)
-
-
 
 # index.html comes with relative links (html/) such that the beta version gets the beta menu
 $(DOCS_TARGET)index.html: \
@@ -501,7 +494,7 @@ $(DOCS_TARGET)index.html: \
 	$(CONVERT_TO_HTML) $<
 	mv $(HTML_TARGET)index.html $@
 	@cd $(HTML_TARGET) && $(RM) -r index.nbpub.log index_files
-	$(PYTHON) utils/post_html.py --menu-prefix=html/ --home $(POST_HTML_OPTIONS)$(HOME_POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/post_html.py --menu-prefix=html/ --home $(POST_HTML_OPTIONS)$(HOME_POST_HTML_OPTIONS) $@
 	@$(OPEN) $@
 
 # 404.html comes with absolute links (/html/) such that it works anywhare
@@ -512,7 +505,7 @@ $(DOCS_TARGET)404.html: $(FULL_NOTEBOOKS)/404.ipynb $(HTML_DEPS)
 	$(CONVERT_TO_HTML) $<
 	mv $(HTML_TARGET)404.html $@
 	@cd $(HTML_TARGET) && $(RM) -r 404.nbpub.log 404_files
-	$(PYTHON) utils/post_html.py --menu-prefix=/html/ --home $(POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/post_html.py --menu-prefix=/html/ --home $(POST_HTML_OPTIONS) $@
 	(echo '---'; echo 'permalink: /404.html'; echo '---'; cat $@) > $@~ && mv $@~ $@
 	@$(OPEN) $@
 
@@ -521,28 +514,29 @@ $(DOCS_TARGET)html/00_Index.html: $(DOCS_TARGET)notebooks/00_Index.ipynb $(HTML_
 	@cd $(HTML_TARGET) && $(RM) -r 00_Index.nbpub.log 00_Index_files
 	@cd $(DOCS_TARGET)html && $(RM) -r 00_Index.nbpub.log 00_Index_files
 	mv $(HTML_TARGET)00_Index.html $@
-	$(PYTHON) utils/post_html.py $(POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/post_html.py $(POST_HTML_OPTIONS) $@
 
 $(DOCS_TARGET)html/00_Table_of_Contents.html: $(DOCS_TARGET)notebooks/00_Table_of_Contents.ipynb $(SITEMAP_SVG)
 	$(CONVERT_TO_HTML) $<
 	@cd $(HTML_TARGET) && $(RM) -r 00_Table_of_Contents.nbpub.log 00_Table_of_Contents_files
 	@cd $(DOCS_TARGET)html && $(RM) -r 00_Table_of_Contents.nbpub.log 00_Table_of_Contents_files
 	mv $(HTML_TARGET)00_Table_of_Contents.html $@
-	$(PYTHON) utils/post_html.py $(POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/post_html.py $(POST_HTML_OPTIONS) $@
 	@$(OPEN) $@
 
 $(HTML_TARGET)%.html: $(FULL_NOTEBOOKS)/%.ipynb $(HTML_DEPS)
 	@test -d $(HTML_TARGET) || $(MKDIR) $(HTML_TARGET)
 	$(CONVERT_TO_HTML) $<
 	@cd $(HTML_TARGET) && $(RM) $*.nbpub.log $*_files/$(BIB)
-	$(PYTHON) utils/post_html.py $(POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/post_html.py $(POST_HTML_OPTIONS) $@
 	@-test -L $(HTML_TARGET)PICS || ln -s ../$(NOTEBOOKS)/PICS $(HTML_TARGET)
 	@$(OPEN) $@
 
-$(SLIDES_TARGET)%.slides.html: $(FULL_NOTEBOOKS)/%.ipynb $(BIB)
+$(SLIDES_TARGET)%.slides.html: $(FULL_NOTEBOOKS)/%.ipynb $(BIB) $(NBSHORTEN)
 	@test -d $(SLIDES_TARGET) || $(MKDIR) $(SLIDES_TARGET)
 	$(eval TMPDIR := $(shell mktemp -d))
 	sed 's/\.ipynb)/\.slides\.html)/g' $< > $(TMPDIR)/$(notdir $<)
+	$(PYTHON) $(NBSHORTEN) --skip-slides --in-place $(TMPDIR)/$(notdir $<)
 	$(CONVERT_TO_SLIDES) $(TMPDIR)/$(notdir $<)
 	@cd $(SLIDES_TARGET) && $(RM) $*.nbpub.log $*_files/$(BIB)
 	@-test -L $(HTML_TARGET)PICS || ln -s ../$(NOTEBOOKS)/PICS $(HTML_TARGET)
@@ -571,9 +565,11 @@ endif
 
 
 # Reconstructing the reveal.js dir
-$(REVEAL_JS):
-	git submodule update --init
-
+.PHONY: reveal.js
+$(REVEAL_JS) reveal.js: .FORCE
+	@-test -d "$@" || (cd $(SLIDES_TARGET); \
+		git submodule add https://github.com/hakimel/reveal.js.git)
+	@git submodule update --remote
 
 $(CODE_TARGET)setup.py: $(CODE_TARGET)setup.py.in
 	cat $< > $@
@@ -583,7 +579,7 @@ $(CODE_TARGET)__init__.py: $(CODE_TARGET)__init__.py.in
 	cat $< > $@
 	chmod +x $@
 
-# For code, we comment out fuzzingbook imports, 
+# For code, we comment out fuzzingbook/debuggingbook imports, 
 # ensuring we import a .py and not the .ipynb file
 $(CODE_TARGET)%.py: $(NOTEBOOKS)/%.ipynb $(EXPORT_NOTEBOOK_CODE)
 	@test -d $(CODE_TARGET) || $(MKDIR) $(CODE_TARGET)
@@ -608,7 +604,7 @@ $(EPUB_TARGET)%.epub: $(MARKDOWN_TARGET)%.md
 
 # NBPDF files - generated from HMTL, with embedded notebooks
 # See instructions at https://github.com/betatim/notebook-as-pdf
-HTMLTONBPDF = utils/htmltonbpdf.py
+HTMLTONBPDF = $(SHARED)utils/htmltonbpdf.py
 
 $(NBPDF_TARGET)%.pdf:  $(HTML_TARGET)/%.html $(RENDERED_NOTEBOOKS)/%.ipynb $(HTMLTONBPDF) $(HTML_TARGET)custom.css
 	@test -d $(NBPDF_TARGET) || $(MKDIR) $(NBPDF_TARGET)
@@ -617,7 +613,8 @@ $(NBPDF_TARGET)%.pdf:  $(HTML_TARGET)/%.html $(RENDERED_NOTEBOOKS)/%.ipynb $(HTM
 
 
 # Conversion rules - entire book
-# We create a fuzzingbook/ folder with the chapters ordered by number, 
+# We create a fuzzingbook/ or debuggingbook/ folder 
+# with the chapters ordered by number, 
 # and let the fuzzingbook converters run on this
 ifeq ($(PUBLISH),nbpublish)
 # With nbpublish
@@ -632,11 +629,12 @@ $(PDF_TARGET)$(BOOK).tex: $(RENDERS) $(BIB) $(PUBLISH_PLUGINS) $(CHAPTERS_MAKEFI
 	done
 	ln -s ../$(BIB) $(BOOK)
 	$(NBPUBLISH) -f latex_ipypublish_book --outpath $(PDF_TARGET) $(BOOK)
+	$(POST_TEX) $@ > $@~ && mv $@~ $@
 	$(RM) -r $(BOOK)
 	cd $(PDF_TARGET) && $(RM) $(BOOK).nbpub.log
 	@echo Created $@
 
-$(HTML_TARGET)$(BOOK).html: $(FULLS) $(BIB) utils/post_html.py
+$(HTML_TARGET)$(BOOK).html: $(FULLS) $(BIB) $(SHARED)utils/post_html.py
 	-$(RM) -r $(BOOK)
 	$(MKDIR) $(BOOK)
 	chapter=0; \
@@ -647,8 +645,8 @@ $(HTML_TARGET)$(BOOK).html: $(FULLS) $(BIB) utils/post_html.py
 	done
 	ln -s ../$(BIB) $(BOOK)
 	$(CONVERT_TO_HTML) $(BOOK)
-	$(PYTHON) utils/nbmerge.py $(BOOK)/Ch*.ipynb > notebooks/$(BOOK).ipynb
-	$(PYTHON) utils/post_html.py $(BETA_FLAG) $(POST_HTML_OPTIONS) $@
+	$(PYTHON) $(SHARED)utils/nbmerge.py $(BOOK)/Ch*.ipynb > notebooks/$(BOOK).ipynb
+	$(PYTHON) $(SHARED)utils/post_html.py $(BETA_FLAG) $(POST_HTML_OPTIONS) $@
 	$(RM) -r $(BOOK) notebooks/$(BOOK).ipynb
 	cd $(HTML_TARGET) && $(RM) $(BOOK).nbpub.log $(BOOK)_files/$(BIB)
 	@echo Created $@
@@ -665,6 +663,7 @@ $(PDF_TARGET)$(BOOK).tex: $(RENDERS) $(BIB) $(PUBLISH_PLUGINS) $(CHAPTERS_MAKEFI
 	done
 	cd book; $(BOOKBOOK_LATEX)
 	mv book/combined.tex $@
+	$(POST_TEX) $@ > $@~ && mv $@~ $@
 	$(RM) -r book
 	@echo Created $@
 
@@ -714,7 +713,7 @@ check-crossref crossref xref: $(SOURCES)
 # Stats
 .PHONY: stats
 stats: $(SOURCES)
-	@cd $(NOTEBOOKS); ../utils/nbstats.py $(SOURCE_FILES)
+	@cd $(NOTEBOOKS); ../$(SHARED)utils/nbstats.py $(SOURCE_FILES)
 
 # Run all code.  This should produce no failures.
 PY_SUCCESS_MAGIC = "--- Code check passed ---"
@@ -755,9 +754,9 @@ check-import check-imports: code
 	
 # Same as above, but using Python standard packages only; import should work too
 check-standard-imports: code
-	PYTHONPATH= $(MAKE) check-imports
+	# PYTHONPATH= $(MAKE) check-imports
 
-check-package: code
+check-package check-packages: code
 	@echo "#!/usr/bin/env $(PYTHON)" > import_packages.py
 	@(for file in $(IMPORTS); do echo import code.$$file; done) | grep -v '^import code.[0-9][0-9]' >> import_packages.py
 	$(PYTHON) import_packages.py 2>&1 | tee import_packages.py.out
@@ -775,7 +774,7 @@ check-todo todo:
 	echo "No todos in $(PUBLIC_CHAPTERS:%.ipynb=%) $(READY_CHAPTERS:%.ipynb=%)"; exit 0; fi
 
 # Spell checks
-NBSPELLCHECK = utils/nbspellcheck.py
+NBSPELLCHECK = $(SHARED)utils/nbspellcheck.py
 .PHONY: spell spellcheck check-spell
 spell spellcheck check-spell:
 	$(NBSPELLCHECK) $(SOURCES)
@@ -790,7 +789,7 @@ check check-all: check-import check-package check-code check-style check-crossre
 metadata: $(ADD_METADATA)
 	@for notebook in $(SOURCES); do \
 		echo "Adding metadata to $$notebook...\c"; \
-		$(PYTHON) $(ADD_METADATA) $$notebook > $$notebook~ || exit 1; \
+		$(PYTHON) $(ADD_METADATA) --project $(PROJECT) $$notebook > $$notebook~ || exit 1; \
 		if diff $$notebook $$notebook~; then \
 			echo "unchanged."; \
 		else \
@@ -816,9 +815,10 @@ README.md: $(MARKDOWN_TARGET)index.md Makefile
 
 .PHONY: publish
 publish: run docs
-	git add $(DOCS_TARGET)* binder/postBuild README.md
+	git add $(DOCS_TARGET)* binder/postBuild README.md \
+		 $(NOTEBOOKS)/PICS/*-synopsis-*
 	-git status
-	-git commit -m "Doc update" $(DOCS_TARGET) binder README.md
+	-git commit -m "Doc update" 
 	@echo "Now use 'make push' to place docs on website and trigger a mybinder update"
 
 # Add/update HTML code in Web pages
@@ -830,7 +830,7 @@ publish-html: html publish-html-setup \
 	$(DOCS_TARGET)html/favicon \
 	$(DOCS:%=$(DOCS_TARGET)html/%.html) \
 	$(DOCS:%=$(DOCS_TARGET)html/%_files)
-	
+
 publish-html-setup:
 	@test -d $(DOCS_TARGET) || $(MKDIR) $(DOCS_TARGET)
 	@test -d $(DOCS_TARGET)html || $(MKDIR) $(DOCS_TARGET)html
@@ -845,7 +845,7 @@ publish-code: code publish-code-setup \
 	$(DOCS_TARGET)code/README.md \
 	$(DOCS_TARGET)code/setup.py \
 	$(DOCS_TARGET)code/__init__.py \
-	$(UTILITY_FILES:%=$(DOCS_TARGET)code/fuzzingbook_utils/%) \
+	$(UTILITY_FILES:%=$(DOCS_TARGET)code/$(UTILS)/%) \
 	$(PUBLIC_CHAPTERS:%.ipynb=$(DOCS_TARGET)code/%.py) \
 	$(APPENDICES:%.ipynb=$(DOCS_TARGET)code/%.py)
 
@@ -854,16 +854,16 @@ publish-code-setup:
 		|| $(MKDIR) $(DOCS_TARGET)
 	@test -d $(DOCS_TARGET)code \
 		|| $(MKDIR) $(DOCS_TARGET)code
-	@test -d $(DOCS_TARGET)code/fuzzingbook_utils \
-		|| $(MKDIR) $(DOCS_TARGET)code/fuzzingbook_utils
+	@test -d $(DOCS_TARGET)code/$(UTILS) \
+		|| $(MKDIR) $(DOCS_TARGET)code/$(UTILS)
 	
 $(DOCS_TARGET)code/%: $(CODE_TARGET)%
 	cp -pr $< $@
 
 .PHONY: dist publish-dist
 dist publish-dist: check-import check-package check-code publish-code toc \
-	$(DOCS_TARGET)dist/fuzzingbook-code.zip \
-	$(DOCS_TARGET)dist/fuzzingbook-notebooks.zip
+	$(DOCS_TARGET)dist/$(PROJECT)-code.zip \
+	$(DOCS_TARGET)dist/$(PROJECT)-notebooks.zip
 
 DIST_CODE_FILES = \
 	$(DOCS_TARGET)code/README.md \
@@ -871,57 +871,57 @@ DIST_CODE_FILES = \
 	$(DOCS_TARGET)code/setup.py \
 	$(DOCS_TARGET)code/__init__.py
 	
-check-fuzzingbook-install:
+check-install:
 	$(eval TMPDIR := $(shell mktemp -d))
 	@cd $(TMPDIR); \
-	$(PYTHON) -c 'import fuzzingbook' 2> /dev/null; \
+	$(PYTHON) -c 'import $(PROJECT)' 2> /dev/null; \
 	if [ $$? = 0 ]; then \
-		echo "Error: Installed fuzzingbook package conflicts with package creation" >&2; \
-		echo "Please uninstall it; e.g. with 'pip uninstall fuzzingbook'." >&2; \
+		echo "Error: Installed $(PROJECT) package conflicts with package creation" >&2; \
+		echo "Please uninstall it; e.g. with 'pip uninstall $(PROJECT)'." >&2; \
 		exit 1; \
 	else \
 		exit 0; \
 	fi
 
-clean-fuzzingbook-dist:
+clean-dist:
 	$(RM) -r code/__pycache__
-	$(RM) -r code/fuzzingbook_utils/__pycache__
-	$(RM) -r $(DOCS_TARGET)notebooks/fuzzingbook/__pycache__
-	$(RM) -r $(DOCS_TARGET)notebooks/fuzzingbook_utils/__pycache__
-	$(RM) -r $(DOCS_TARGET)code/fuzzingbook_utils/__pycache__
+	$(RM) -r code/$(UTILS)/__pycache__
+	$(RM) -r $(DOCS_TARGET)notebooks/$(PROJECT)/__pycache__
+	$(RM) -r $(DOCS_TARGET)notebooks/$(UTILS)/__pycache__
+	$(RM) -r $(DOCS_TARGET)code/$(UTILS)/__pycache__
 	$(RM) -r $(DOCS_TARGET)notebooks/.ipynb_checkpoints
 
-$(DOCS_TARGET)dist/fuzzingbook-code.zip: \
+$(DOCS_TARGET)dist/$(PROJECT)-code.zip: \
 	$(PYS) $(DIST_CODE_FILES) $(CHAPTERS_MAKEFILE) \
-	check-fuzzingbook-install clean-fuzzingbook-dist
+	check-install clean-dist
 	@-mkdir $(DOCS_TARGET)dist
 	$(RM) -r $(DOCS_TARGET)dist/*
-	$(RM) -r $(DOCS_TARGET)fuzzingbook
-	mkdir $(DOCS_TARGET)fuzzingbook
-	ln -s ../code $(DOCS_TARGET)fuzzingbook/fuzzingbook
-	mv $(DOCS_TARGET)fuzzingbook/fuzzingbook/setup.py $(DOCS_TARGET)fuzzingbook
-	mv $(DOCS_TARGET)fuzzingbook/fuzzingbook/README.md $(DOCS_TARGET)fuzzingbook
-	cd $(DOCS_TARGET)fuzzingbook; PYTHONPATH= $(PYTHON) ./setup.py sdist
-	mv $(DOCS_TARGET)fuzzingbook/dist/* $(DOCS_TARGET)dist
-	$(RM) -r $(DOCS_TARGET)fuzzingbook/*.egg-info
-	$(RM) -r $(DOCS_TARGET)fuzzingbook/dist $(DOCS_TARGET)fuzzingbook/build
-	cd $(DOCS_TARGET); $(ZIP) $(ZIP_OPTIONS) fuzzingbook-code.zip fuzzingbook
-	mv $(DOCS_TARGET)fuzzingbook-code.zip $(DOCS_TARGET)dist
-	$(RM) -r $(DOCS_TARGET)fuzzingbook $(DOCS_TARGET)code/fuzzingbook
+	$(RM) -r $(DOCS_TARGET)$(PROJECT)
+	mkdir $(DOCS_TARGET)$(PROJECT)
+	ln -s ../code $(DOCS_TARGET)$(PROJECT)/$(PROJECT)
+	mv $(DOCS_TARGET)$(PROJECT)/$(PROJECT)/setup.py $(DOCS_TARGET)$(PROJECT)
+	mv $(DOCS_TARGET)$(PROJECT)/$(PROJECT)/README.md $(DOCS_TARGET)$(PROJECT)
+	cd $(DOCS_TARGET)$(PROJECT); PYTHONPATH= $(PYTHON) ./setup.py sdist
+	mv $(DOCS_TARGET)$(PROJECT)/dist/* $(DOCS_TARGET)dist
+	$(RM) -r $(DOCS_TARGET)$(PROJECT)/*.egg-info
+	$(RM) -r $(DOCS_TARGET)$(PROJECT)/dist $(DOCS_TARGET)$(PROJECT)/build
+	cd $(DOCS_TARGET); $(ZIP) $(ZIP_OPTIONS) $(PROJECT)-code.zip $(PROJECT)
+	mv $(DOCS_TARGET)$(PROJECT)-code.zip $(DOCS_TARGET)dist
+	$(RM) -r $(DOCS_TARGET)$(PROJECT) $(DOCS_TARGET)code/$(PROJECT)
 	$(RM) -r $(DOCS_TARGET)code/dist $(DOCS_TARGET)code/*.egg-info
 	@echo "Created code distribution files in $(DOCS_TARGET)dist"
 	
-$(DOCS_TARGET)dist/fuzzingbook-notebooks.zip: $(FULLS) $(CHAPTERS_MAKEFILE) \
-	clean-fuzzingbook-dist
-	cd $(DOCS_TARGET); ln -s notebooks fuzzingbook-notebooks
+$(DOCS_TARGET)dist/$(PROJECT)-notebooks.zip: $(FULLS) $(CHAPTERS_MAKEFILE) \
+	clean-dist
+	cd $(DOCS_TARGET); ln -s notebooks $(PROJECT)-notebooks
 	cd $(DOCS_TARGET); \
-		$(ZIP) $(ZIP_OPTIONS) fuzzingbook-notebooks.zip fuzzingbook-notebooks
-	$(RM) $(DOCS_TARGET)/fuzzingbook-notebooks
+		$(ZIP) $(ZIP_OPTIONS) $(PROJECT)-notebooks.zip $(PROJECT)-notebooks
+	$(RM) $(DOCS_TARGET)/$(PROJECT)-notebooks
 	cd $(DOCS_TARGET); \
 		for file in $(EXTRAS); do \
-			$(ZIP) fuzzingbook-notebooks.zip -d fuzzingbook-notebooks/$$file; \
+			$(ZIP) $(PROJECT)-notebooks.zip -d $(PROJECT)-notebooks/$$file; \
 		done
-	mv $(DOCS_TARGET)fuzzingbook-notebooks.zip $@
+	mv $(DOCS_TARGET)$(PROJECT)-notebooks.zip $@
 	@echo "Created notebook distribution files in $(DOCS_TARGET)dist"
 
 
@@ -929,8 +929,10 @@ $(DOCS_TARGET)dist/fuzzingbook-notebooks.zip: $(FULLS) $(CHAPTERS_MAKEFILE) \
 .PHONY: publish-slides publish-slides-setup
 publish-slides: slides publish-slides-setup \
 	$(PUBLIC_CHAPTERS:%.ipynb=$(DOCS_TARGET)slides/%.slides.html) \
-	$(APPENDICES:%.ipynb=$(DOCS_TARGET)slides/%.slides.html)
-	
+	$(APPENDICES:%.ipynb=$(DOCS_TARGET)slides/%.slides.html) \
+	$(DOCS_TARGET)slides/reveal.js
+	@-rm -fr $(DOCS_TARGET)slides/.git
+
 publish-slides-setup:
 	@test -d $(DOCS_TARGET) || $(MKDIR) $(DOCS_TARGET)
 	@test -d $(DOCS_TARGET)slides || $(MKDIR) $(DOCS_TARGET)slides
@@ -943,24 +945,22 @@ $(DOCS_TARGET)slides/%: $(SLIDES_TARGET)%
 .PHONY: publish-notebooks publish-notebooks-setup
 publish-notebooks: full-notebooks publish-notebooks-setup \
 	$(DOCS_TARGET)notebooks/custom.css \
-	$(DOCS_TARGET)notebooks/fuzzingbook.bib \
+	$(DOCS_TARGET)notebooks/$(BIB) \
 	$(DOCS_TARGET)notebooks/LICENSE.md \
 	$(DOCS_TARGET)notebooks/README.md \
 	$(DOCS:%=$(DOCS_TARGET)notebooks/%.ipynb) \
-	$(UTILITY_FILES:%=$(DOCS_TARGET)notebooks/fuzzingbook_utils/%)
-	
+	$(UTILITY_FILES:%=$(DOCS_TARGET)notebooks/$(UTILS)/%)
+
 publish-notebooks-setup:
 	@test -d $(DOCS_TARGET) \
 		|| $(MKDIR) $(DOCS_TARGET)
 	@test -d $(DOCS_TARGET)notebooks \
 		|| $(MKDIR) $(DOCS_TARGET)notebooks
-	@test -d $(DOCS_TARGET)notebooks/fuzzingbook_utils \
-		|| $(MKDIR) $(DOCS_TARGET)notebooks/fuzzingbook_utils
+	@test -d $(DOCS_TARGET)notebooks/$(UTILS) \
+		|| $(MKDIR) $(DOCS_TARGET)notebooks/$(UTILS)
 
 $(DOCS_TARGET)notebooks/%: $(FULL_NOTEBOOKS)/%
 	cp -pr $< $@
-
-
 
 .PHONY: publish-index
 publish-index: $(DOCS_TARGET)notebooks/00_Index.ipynb
@@ -981,35 +981,36 @@ publish-pics-setup:
 # Table of contents
 .PHONY: toc
 toc: $(DOCS_TARGET)notebooks/00_Table_of_Contents.ipynb
-$(DOCS_TARGET)notebooks/00_Table_of_Contents.ipynb: utils/nbtoc.py \
+$(DOCS_TARGET)notebooks/00_Table_of_Contents.ipynb: $(SHARED)utils/nbtoc.py \
 	$(TOC_CHAPTERS:%=$(DOCS_TARGET)notebooks/%) \
 	$(TOC_APPENDICES:%=$(DOCS_TARGET)notebooks/%) \
 	$(CHAPTERS_MAKEFILE) \
 	$(SITEMAP_SVG)
 	$(RM) $@
-	$(PYTHON) utils/nbtoc.py \
+	$(PYTHON) $(SHARED)utils/nbtoc.py \
+		--title="$(BOOKTITLE)" \
 		--chapters="$(TOC_CHAPTERS:%=$(DOCS_TARGET)notebooks/%)" \
 		--appendices="$(TOC_APPENDICES:%=$(DOCS_TARGET)notebooks/%)" > $@
 	$(EXECUTE_NOTEBOOK) $@ && mv $(FULL_NOTEBOOKS)/00_Table_of_Contents.ipynb $@
-	$(PYTHON) $(ADD_METADATA) $@ > $@~ && mv $@~ $@
+	$(PYTHON) $(ADD_METADATA) --project $(PROJECT) $@ > $@~ && mv $@~ $@
 	$(JUPYTER) trust $@
 	@$(OPEN) $@
 
 		
 # Index
 .PHONY: index
-index: $(DOCS_TARGET)/notebooks/00_Index.ipynb $(DOCS_TARGET)/html/00_Index.html
-$(DOCS_TARGET)notebooks/00_Index.ipynb: utils/nbindex.py \
+index: $(DOCS_TARGET)notebooks/00_Index.ipynb $(DOCS_TARGET)/html/00_Index.html
+$(DOCS_TARGET)notebooks/00_Index.ipynb: $(SHARED)utils/nbindex.py \
 	$(TOC_CHAPTERS:%=$(DOCS_TARGET)notebooks/%) \
 	$(TOC_APPENDICES:%=$(DOCS_TARGET)notebooks/%) \
 	$(CHAPTERS_MAKEFILE)
-	(cd $(NOTEBOOKS); $(PYTHON) ../utils/nbindex.py $(TOC_CHAPTERS) $(APPENDICES)) > $@
+	(cd $(NOTEBOOKS); $(PYTHON) ../$(SHARED)utils/nbindex.py $(TOC_CHAPTERS) $(APPENDICES)) > $@
 	@$(OPEN) $@
 	
 
 ## Synopsis
-update-synopsis:
-	$(PYTHON) $(NBSYNOPSIS) --update $(CHAPTER_SOURCES)
+update-synopsis synopsis:
+	$(PYTHON) $(NBSYNOPSIS) --project $(PROJECT) --update $(CHAPTER_SOURCES)
 
 no-synopsis:
 	@echo Chapters without synopsis:
@@ -1017,7 +1018,7 @@ no-synopsis:
 
 
 ## Python packages
-# After this, you can do 'pip install fuzzingbook' 
+# After this, you can do 'pip install fuzzingbook / debuggingbook' 
 # and then 'from fuzzingbook.Fuzzer import Fuzzer' :-)
 .PHONY: upload-dist
 upload-dist: dist
@@ -1058,8 +1059,8 @@ binder/binder.log: .FORCE
 
 ## Docker services (experimental)
 docker:
-	docker pull fuzzingbook/student
-	-docker run -d -p 8888:8888 --name fuzzing-book-instance fuzzingbook/student
+	docker pull $(PROJECT)/student
+	-docker run -d -p 8888:8888 --name fuzzing-book-instance $(PROJECT)/student
 
 docker-start:
 	docker start fuzzing-book-instance
@@ -1073,7 +1074,7 @@ docker-stop:
 ## Getting rid of stray processes and workspaces
 kill:
 	-pkill -HUP -l -f jupyter-lab Firefox.app firefox-bin runserver
-	$(RM) $$HOME/lab/workspaces/*.jupyterlab-workspace
+	$(RM) $$HOME/.jupyter/lab/workspaces/*.jupyterlab-workspace
 
 ## Cleanup
 AUX = *.aux *.bbl *.blg *.log *.out *.toc *.frm *.lof *.lot *.fls *.fdb_latexmk \
@@ -1145,19 +1146,19 @@ endif
 
 
 ## Dependencies as graph
-NBDEPEND = utils/nbdepend.py
-SITEMAP_OPTIONS = --graph --transitive-reduction # --cluster-by-parts
+NBDEPEND = $(SHARED)utils/nbdepend.py
+SITEMAP_OPTIONS = --graph --transitive-reduction --project $(PROJECT) # --cluster-by-parts
 
 sitemap: $(SITEMAP_SVG)
 $(SITEMAP_SVG): $(CHAPTER_SOURCES) $(NBDEPEND)
 	$(PYTHON) $(NBDEPEND) $(SITEMAP_OPTIONS) $(CHAPTER_SOURCES) > $@~ && mv $@~ $@
 	@$(OPEN) $@
 
-$(FULL_NOTEBOOKS)/Tours.ipynb: $(SITEMAP_SVH)	
-$(RENDERED_NOTEBOOKS)/Tours.ipynb: $(SITEMAP_SVH)	
+$(FULL_NOTEBOOKS)/Tours.ipynb: $(SITEMAP_SVG)	
+$(RENDERED_NOTEBOOKS)/Tours.ipynb: $(SITEMAP_SVG)	
 
-$(FULL_NOTEBOOKS)/00_Table_of_Contents.ipynb: $(SITEMAP_SVH)	
-$(RENDERED_NOTEBOOKS)/00_Table_of_Contents.ipynb: $(SITEMAP_SVH)	
+$(FULL_NOTEBOOKS)/00_Table_of_Contents.ipynb: $(SITEMAP_SVG)	
+$(RENDERED_NOTEBOOKS)/00_Table_of_Contents.ipynb: $(SITEMAP_SVG)	
 
 
 ## Dependencies - should come at the very end
